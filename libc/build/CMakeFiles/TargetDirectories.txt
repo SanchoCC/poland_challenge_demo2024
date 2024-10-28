@@ -1,4 +1,0 @@
-C:/Users/Sancho/Desktop/poland_challenge_demo2024/poland_challenge_demo2024/libc/build/CMakeFiles/ann.dir
-C:/Users/Sancho/Desktop/poland_challenge_demo2024/poland_challenge_demo2024/libc/build/CMakeFiles/run.dir
-C:/Users/Sancho/Desktop/poland_challenge_demo2024/poland_challenge_demo2024/libc/build/CMakeFiles/ALL_BUILD.dir
-C:/Users/Sancho/Desktop/poland_challenge_demo2024/poland_challenge_demo2024/libc/build/CMakeFiles/ZERO_CHECK.dir
