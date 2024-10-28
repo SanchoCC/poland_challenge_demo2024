@@ -6,6 +6,8 @@
 
 **/build
 
+*.txt
+
 # User-specific files
 *.rsuser
 *.suo
