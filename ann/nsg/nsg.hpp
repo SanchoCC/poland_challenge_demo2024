@@ -97,27 +97,26 @@ struct NSG : public Builder {
 
   Graph<int> GetGraph() override { return std::move(final_graph); }
 
-  void Init(const Graph<int> &knng) {
-    std::vector<float> center(d);
-    for (int i = 0; i < d; ++i) {
-      center[i] = 0.0;
-    }
-    for (int i = 0; i < nb; i++) {
+  void Init(const Graph<int>& knng) {
+      std::vector<float> center(d, 0.0f);
+      float inv_nb = 1.0f / nb;
+#pragma omp parallel for
       for (int j = 0; j < d; j++) {
-        center[j] += data[i * d + j];
+          float sum = 0.0f;
+          for (int i = 0; i < nb; i++) {
+              sum += data[i * d + j];
+          }
+          center[j] = sum * inv_nb;
       }
-    }
-    for (int i = 0; i < d; i++) {
-      center[i] /= nb;
-    }
-    int ep_init = rng.rand_int(nb);
-    std::vector<Neighbor> retset;
-    std::vector<Node> tmpset;
-    std::vector<bool> vis(nb);
-    search_on_graph<false>(center.data(), knng, vis, ep_init, L, retset,
-                           tmpset);
-    // set enterpoint
-    this->ep = retset[0].id;
+
+      int ep_init = rng.rand_int(nb);
+      std::vector<Neighbor> retset;
+      std::vector<Node> tmpset;
+      std::vector<bool> vis(nb);
+      search_on_graph<false>(center.data(), knng, vis, ep_init, L, retset,
+          tmpset);
+      // set enterpoint
+      this->ep = retset[0].id;
   }
 
   template <bool collect_fullset>
