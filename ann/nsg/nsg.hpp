@@ -67,13 +67,13 @@ struct NSG : public Builder {
       std::fill_n(final_graph.data, n * R, EMPTY_ID);
       final_graph.eps = {ep};
 #pragma omp parallel for
-      for (int i = 0; i < n; i++) {
+      for (int i = 0; i < n; ++i) {
         int cnt = 0;
-        for (int j = 0; j < R; j++) {
+        for (int j = 0; j < R; ++j) {
           int id = tmp_graph.at(i, j).id;
           if (id != EMPTY_ID) {
             final_graph.at(i, cnt) = id;
-            cnt += 1;
+            ++cnt;
           }
           degrees[i] = cnt;
         }
@@ -82,10 +82,10 @@ struct NSG : public Builder {
     [[maybe_unused]] int num_attached = tree_grow(degrees);
     int max = 0, min = 1e6;
     double avg = 0;
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n; ++i) {
       int size = 0;
       while (size < R && final_graph.at(i, size) != EMPTY_ID) {
-        size += 1;
+        ++size;
       }
       max = std::max(size, max);
       min = std::min(size, min);

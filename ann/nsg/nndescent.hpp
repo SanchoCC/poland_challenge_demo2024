@@ -25,7 +25,7 @@ struct NNDescent {
 
     Nhood(std::mt19937 &rng, int s, int64_t N) {
       M = s;
-      nn_new.resize(s * 2);
+      nn_new.resize(s + s);
       GenRandom(rng, nn_new.data(), (int)nn_new.size(), N);
     }
 
@@ -50,7 +50,7 @@ struct NNDescent {
       std::scoped_lock guard(lock);
       if (dist > pool.front().distance)
         return;
-      for (int i = 0; i < (int)pool.size(); i++) {
+      for (int i = 0; i < (int)pool.size(); ++i) {
         if (id == pool[i].id)
           return;
       }
@@ -109,9 +109,9 @@ struct NNDescent {
     Init();
     Descent();
     final_graph.init(n, K);
-    for (int i = 0; i < nb; i++) {
+    for (int i = 0; i < nb; ++i) {
       std::sort(graph[i].pool.begin(), graph[i].pool.end());
-      for (int j = 0; j < K; j++) {
+      for (int j = 0; j < K; ++j) {
         final_graph.at(i, j) = graph[i].pool[j].id;
       }
     }
@@ -133,7 +133,7 @@ struct NNDescent {
       for (int i = 0; i < nb; ++i) {
         std::vector<int> tmp(S);
         GenRandom(rng, tmp.data(), S, nb);
-        for (int j = 0; j < S; j++) {
+        for (int j = 0; j < S; ++j) {
           int id = tmp[j];
           if (id == i)
             continue;
@@ -167,7 +167,7 @@ struct NNDescent {
 
   void Join() {
 #pragma omp parallel for default(shared) schedule(dynamic, 100)
-    for (int u = 0; u < nb; u++) {
+    for (int u = 0; u < nb; ++u) {
       graph[u].join([&](int i, int j) {
         if (i != j) {
           float dist = dist_func(data + i * d, data + j * d, d);
@@ -242,6 +242,7 @@ struct NNDescent {
       }
     }
 #pragma omp parallel for
+    int double_R = R + R;
     for (int i = 0; i < nb; ++i) {
       auto &nn_new = graph[i].nn_new;
       auto &nn_old = graph[i].nn_old;
@@ -249,9 +250,9 @@ struct NNDescent {
       auto &rnn_old = graph[i].rnn_old;
       nn_new.insert(nn_new.end(), rnn_new.begin(), rnn_new.end());
       nn_old.insert(nn_old.end(), rnn_old.begin(), rnn_old.end());
-      if ((int)nn_old.size() > R * 2) {
-        nn_old.resize(R * 2);
-        nn_old.reserve(R * 2);
+      if ((int)nn_old.size() > double_R) {
+        nn_old.resize(double_R);
+        nn_old.reserve(double_R);
       }
       std::vector<int>().swap(graph[i].rnn_new);
       std::vector<int>().swap(graph[i].rnn_old);
@@ -261,16 +262,16 @@ struct NNDescent {
   void GenEvalGt(const std::vector<int> &eval_set,
                  std::vector<std::vector<int>> &eval_gt) {
 #pragma omp parallel for
-    for (int i = 0; i < (int)eval_set.size(); i++) {
+    for (int i = 0; i < (int)eval_set.size(); ++i) {
       std::vector<Neighbor> tmp;
-      for (int j = 0; j < nb; j++) {
+      for (int j = 0; j < nb; ++j) {
         if (eval_set[i] == j)
           continue;
         float dist = dist_func(data + eval_set[i] * d, data + j * d, d);
         tmp.push_back(Neighbor(j, dist, true));
       }
       std::partial_sort(tmp.begin(), tmp.begin() + K, tmp.end());
-      for (int j = 0; j < K; j++) {
+      for (int j = 0; j < K; ++j) {
         eval_gt[i].push_back(tmp[j].id);
       }
     }
@@ -279,21 +280,24 @@ struct NNDescent {
   float EvalRecall(const std::vector<int> &eval_set,
                    const std::vector<std::vector<int>> &eval_gt) {
     float mean_acc = 0.0f;
-    for (int i = 0; i < (int)eval_set.size(); i++) {
+    int eval_set_size = eval_set.size();
+    for (int i = 0; i < eval_set_size; ++i) {
       float acc = 0;
       std::vector<Neighbor> &g = graph[eval_set[i]].pool;
       const std::vector<int> &v = eval_gt[i];
-      for (int j = 0; j < (int)g.size(); j++) {
-        for (int k = 0; k < (int)v.size(); k++) {
+      int g_size = g.size();
+      int v_size = v.size();
+      for (int j = 0; j < g_size; ++j) {
+        for (int k = 0; k < v_size; ++k) {
           if (g[j].id == v[k]) {
-            acc++;
+            ++acc;
             break;
           }
         }
       }
-      mean_acc += acc / v.size();
+      mean_acc += acc / v_size;
     }
-    return mean_acc / eval_set.size();
+    return mean_acc / eval_set_size;
   }
 };
 
