@@ -25,8 +25,8 @@ constexpr inline bool SQ4UA_REFINE = true;
 constexpr inline bool PQ8_REFINE = true;
 
 constexpr inline int32_t SQ8_REFINE_FACTOR = 10;
-constexpr inline int32_t SQ8U_REFINE_FACTOR = 2;
-constexpr inline int32_t SQ8P_REFINE_FACTOR = 10;
+constexpr inline int32_t SQ8U_REFINE_FACTOR = 6;
+constexpr inline int32_t SQ8P_REFINE_FACTOR = 15;
 constexpr inline int32_t SQ4U_REFINE_FACTOR = 10;
 constexpr inline int32_t SQ4UA_REFINE_FACTOR = 10;
 constexpr inline int32_t PQ8_REFINE_FACTOR = 10;
@@ -43,18 +43,18 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
   Quant quant;
 
   // Search parameters
-  int32_t ef = 64;
+  int32_t ef = 128;
 
   // Memory prefetch parameters
-  int32_t po = 1;
-  int32_t pl = 1;
-  int32_t graph_po = 1;
+  int32_t po = 2;
+  int32_t pl = 2;
+  int32_t graph_po = 2;
 
   // Optimization parameters
   constexpr static int32_t kOptimizePoints = 1500;
-  constexpr static int32_t kTryPos = 20;
-  constexpr static int32_t kTryPls = 10;
-  constexpr static int32_t kTryK = 20;
+  constexpr static int32_t kTryPos = 15;
+  constexpr static int32_t kTryPls = 15;
+  constexpr static int32_t kTryK = 15;
   int32_t sample_points_num;
   std::vector<float> optimize_queries;
 
