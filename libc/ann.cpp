@@ -11,15 +11,15 @@
 
 
 
-int nndescent_iter = 15;
-int nndescent_GK = 200;
+int nndescent_iter = 25; // was 15
+int nndescent_GK = 500; // was 200
 int nndescent_S = 10;
 int nndescent_R = 100;
-int nndescent_L = 200;
+int nndescent_L = 400; // was 200
 
-int ann_R = 50;
+int ann_R = 80; // was 50
 int ann_M = 8;
-int ann_L = 100;
+int ann_L = 180; // was 100
 
 bool is_load = 0;
 
