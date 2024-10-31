@@ -58,33 +58,30 @@ struct NSG : public Builder {
     nnd.iters = nndescent_iter;
     nnd.Build(data, n, GK);
     const auto &knng = nnd.final_graph;
-
     Init(knng);
-
     std::vector<int> degrees(n, 0);
-    final_graph.init(n, R);
-    std::fill_n(final_graph.data, n * R, EMPTY_ID);
-    final_graph.eps = {ep};
-
-    #pragma omp parallel for
-    for (int i = 0; i < n; ++i) {
-        int cnt = 0;
-        for (int j = 0; j < R; ++j) {
-            int id = knng.at(i, j);
-            if (id != EMPTY_ID) {
-                final_graph.at(i, cnt) = id;
-                ++cnt;
-            }
-        }
-        degrees[i] = cnt;
+    {
+      Graph<Node> tmp_graph(n, R);
+      link(knng, tmp_graph);
+      final_graph.init(n, R);
+      std::fill_n(final_graph.data, n * R, EMPTY_ID);
+      final_graph.eps = {ep};
+#pragma omp parallel for
+      for (int i = 0; i < n; ++i) {
+          int cnt = 0;
+          for (int j = 0; j < R; ++j) {
+              int id = tmp_graph.at(i, j).id;
+              if (id != EMPTY_ID) {
+                  final_graph.at(i, cnt) = id;
+                  ++cnt;
+              }
+              degrees[i] = cnt;
+          }
+      }
     }
-
     [[maybe_unused]] int num_attached = tree_grow(degrees);
-   
     int max = 0, min = 1e6;
     double avg = 0;
-
-    #pragma omp parallel for reduction(max : max) reduction(min : min) reduction(+: avg)
     for (int i = 0; i < n; ++i) {
         int size = 0;
         while (size < R && final_graph.at(i, size) != EMPTY_ID) {
@@ -95,10 +92,8 @@ struct NSG : public Builder {
         avg += size;
     }
     avg = avg / n;
-
-    // printf("Degree Statistics: Max = %d, Min = %d, Avg = %lf\n", max, min, avg);
-}
-
+    //printf("Degree Statistics: Max = %d, Min = %d, Avg = %lf\n", max, min, avg);
+  }
 
   Graph<int> GetGraph() override { return std::move(final_graph); }
 
