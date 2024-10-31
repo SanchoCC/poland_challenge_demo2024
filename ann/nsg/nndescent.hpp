@@ -120,17 +120,13 @@ struct NNDescent {
 
   void Init() {
     graph.reserve(nb);
-    {
-      std::mt19937 rng(random_seed * 6007);
-      for (int i = 0; i < nb; ++i) {
-        graph.emplace_back(rng, S, nb);
-      }
-    }
 #pragma omp parallel
     {
       std::mt19937 rng(random_seed * 7741 + omp_get_thread_num());
 #pragma omp for
+      std::mt19937 rng1(random_seed * 6007);
       for (int i = 0; i < nb; ++i) {
+          graph.emplace_back(rng1, S, nb);
         std::vector<int> tmp(S);
         GenRandom(rng, tmp.data(), S, nb);
         for (int j = 0; j < S; j++) {
@@ -180,82 +176,89 @@ struct NNDescent {
 
   void Update() {
 #pragma omp parallel for
-    for (int i = 0; i < nb; i++) {
-      std::vector<int>().swap(graph[i].nn_new);
-      std::vector<int>().swap(graph[i].nn_old);
-    }
-#pragma omp parallel for
-    for (int n = 0; n < nb; ++n) {
-      auto &nn = graph[n];
-      std::sort(nn.pool.begin(), nn.pool.end());
-      if ((int)nn.pool.size() > L) {
-        nn.pool.resize(L);
-      }
-      nn.pool.reserve(L);
-      int maxl = std::min(nn.M + S, (int)nn.pool.size());
-      int c = 0;
-      int l = 0;
-      while ((l < maxl) && (c < S)) {
-        if (nn.pool[l].flag)
-          ++c;
-        ++l;
-      }
-      nn.M = l;
-    }
-#pragma omp parallel
-    {
-      std::mt19937 rng(random_seed * 5081 + omp_get_thread_num());
-#pragma omp for
       for (int n = 0; n < nb; ++n) {
-        auto &node = graph[n];
-        auto &nn_new = node.nn_new;
-        auto &nn_old = node.nn_old;
-        for (int l = 0; l < node.M; ++l) {
-          auto &nn = node.pool[l];
-          auto &other = graph[nn.id];
-          if (nn.flag) {
-            nn_new.push_back(nn.id);
-            if (nn.distance > other.pool.back().distance) {
-              std::scoped_lock guard(other.lock);
-              if ((int)other.rnn_new.size() < R) {
-                other.rnn_new.push_back(n);
-              } else {
-                int pos = rng() % R;
-                other.rnn_new[pos] = n;
-              }
-            }
-            nn.flag = false;
-          } else {
-            nn_old.push_back(nn.id);
-            if (nn.distance > other.pool.back().distance) {
-              std::scoped_lock guard(other.lock);
-              if ((int)other.rnn_old.size() < R) {
-                other.rnn_old.push_back(n);
-              } else {
-                int pos = rng() % R;
-                other.rnn_old[pos] = n;
-              }
-            }
+          auto& nn = graph[n];
+
+          std::vector<int>().swap(nn.nn_new);
+          std::vector<int>().swap(nn.nn_old);
+
+          std::sort(nn.pool.begin(), nn.pool.end());
+          if ((int)nn.pool.size() > L) {
+              nn.pool.resize(L);
           }
-        }
-        std::make_heap(node.pool.begin(), node.pool.end());
+          nn.pool.reserve(L);
+
+          int maxl = std::min(nn.M + S, (int)nn.pool.size());
+          int c = 0;
+          int l = 0;
+          while ((l < maxl) && (c < S)) {
+              if (nn.pool[l].flag)
+                  ++c;
+              ++l;
+          }
+          nn.M = l;
       }
-    }
+
+#pragma omp parallel
+      {
+          std::mt19937 rng(random_seed * 5081 + omp_get_thread_num());
+
+#pragma omp for
+          for (int n = 0; n < nb; ++n) {
+              auto& node = graph[n];
+              auto& nn_new = node.nn_new;
+              auto& nn_old = node.nn_old;
+
+              for (int l = 0; l < node.M; ++l) {
+                  auto& nn = node.pool[l];
+                  auto& other = graph[nn.id];
+                  if (nn.flag) {
+                      nn_new.push_back(nn.id);
+                      if (nn.distance > other.pool.back().distance) {
+                          std::scoped_lock guard(other.lock);
+                          if ((int)other.rnn_new.size() < R) {
+                              other.rnn_new.push_back(n);
+                          } else {
+                              int pos = rng() % R;
+                              other.rnn_new[pos] = n;
+                          }
+                      }
+                      nn.flag = false;
+                  } else {
+                      nn_old.push_back(nn.id);
+                      if (nn.distance > other.pool.back().distance) {
+                          std::scoped_lock guard(other.lock);
+                          if ((int)other.rnn_old.size() < R) {
+                              other.rnn_old.push_back(n);
+                          } else {
+                              int pos = rng() % R;
+                              other.rnn_old[pos] = n;
+                          }
+                      }
+                  }
+              }
+              std::make_heap(node.pool.begin(), node.pool.end());
+          }
+      }
+
 #pragma omp parallel for
-    for (int i = 0; i < nb; ++i) {
-      auto &nn_new = graph[i].nn_new;
-      auto &nn_old = graph[i].nn_old;
-      auto &rnn_new = graph[i].rnn_new;
-      auto &rnn_old = graph[i].rnn_old;
-      nn_new.insert(nn_new.end(), rnn_new.begin(), rnn_new.end());
-      nn_old.insert(nn_old.end(), rnn_old.begin(), rnn_old.end());
-      if ((int)nn_old.size() > R * 2) {
-        nn_old.resize(R * 2);
-        nn_old.reserve(R * 2);
+      for (int i = 0; i < nb; ++i) {
+          auto& nn_new = graph[i].nn_new;
+          auto& nn_old = graph[i].nn_old;
+          auto& rnn_new = graph[i].rnn_new;
+          auto& rnn_old = graph[i].rnn_old;
+
+          nn_new.insert(nn_new.end(), rnn_new.begin(), rnn_new.end());
+          nn_old.insert(nn_old.end(), rnn_old.begin(), rnn_old.end());
+
+          if ((int)nn_old.size() > R * 2) {
+              nn_old.resize(R * 2);
+              nn_old.reserve(R * 2);
+          }
+
+          std::vector<int>().swap(rnn_new);
+          std::vector<int>().swap(rnn_old);
       }
-      std::vector<int>().swap(graph[i].rnn_new);
-      std::vector<int>().swap(graph[i].rnn_old);
-    }
   }
 
   void GenEvalGt(const std::vector<int> &eval_set,
