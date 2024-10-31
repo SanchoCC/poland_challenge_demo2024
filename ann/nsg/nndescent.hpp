@@ -120,13 +120,17 @@ struct NNDescent {
 
   void Init() {
     graph.reserve(nb);
+    {
+      std::mt19937 rng(random_seed * 6007);
+      for (int i = 0; i < nb; ++i) {
+        graph.emplace_back(rng, S, nb);
+      }
+    }
 #pragma omp parallel
     {
       std::mt19937 rng(random_seed * 7741 + omp_get_thread_num());
 #pragma omp for
-      std::mt19937 rng1(random_seed * 6007);
       for (int i = 0; i < nb; ++i) {
-          graph.emplace_back(rng1, S, nb);
         std::vector<int> tmp(S);
         GenRandom(rng, tmp.data(), S, nb);
         for (int j = 0; j < S; j++) {
