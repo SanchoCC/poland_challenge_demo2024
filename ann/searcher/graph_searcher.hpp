@@ -46,7 +46,7 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
   int32_t ef = 128;
 
   // Memory prefetch parameters
-  int32_t po = 6; // was 2
+  int32_t po = 10; // was 2
   int32_t pl = 6; // was 2
   int32_t graph_po = 18; // was 2
 
