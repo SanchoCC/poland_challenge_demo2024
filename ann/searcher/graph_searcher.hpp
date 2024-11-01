@@ -51,7 +51,7 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
   int32_t graph_po = 18; // was 2
 
   // Optimization parameters
-  constexpr static int32_t kOptimizePoints = 50000;// was 1500 -> 10000
+  constexpr static int32_t kOptimizePoints = 30000;// was 1500 -> 10000
   constexpr static int32_t kTryPos = 15;
   constexpr static int32_t kTryPls = 15;
   constexpr static int32_t kTryK = 15;
