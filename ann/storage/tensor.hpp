@@ -88,12 +88,7 @@ struct Tensor {
 
   char *get(int32_t u) const { return codes + (int64_t)u * csize; }
 
-  void add(int32_t u, const char* x) {
-#pragma omp parallel for
-      for (int32_t i = 0; i < d; ++i) {
-          codes[u * csize + i] = x[i];
-      }
-  }
+  void add(int32_t u, const char *x) { memcpy(get(u), x, d * 4); }
 
   void prefetch(int32_t u, int32_t num) const { mem_prefetch(get(u), num); }
 
@@ -102,10 +97,12 @@ struct Tensor {
   int32_t dim_align() const { return dalign; }
   int32_t code_size() const { return csize; }
 
-  Tensor copy() { // changed
-      Tensor ret(nb, d, nbits, align_width);
-      memcpy(ret.codes, codes, nb * csize); 
-      return ret;
+  Tensor copy() {
+    Tensor ret(nb, d, nbits, align_width);
+    for (int32_t i = 0; i < nb; ++i) {
+      ret.add(i, get(i));
+    }
+    return ret;
   }
 
   Tensor astype(DataType type_dst) {
