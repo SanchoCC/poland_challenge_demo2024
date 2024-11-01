@@ -11,7 +11,7 @@ struct ProductQuant : Template {
   using type = ProductQuant;
   using data_type = uint8_t;
 
-  constexpr static int32_t K = 256;
+  constexpr static int32_t K = 128;
   int32_t d;
   int32_t sd;
   int32_t nsq;
@@ -19,7 +19,7 @@ struct ProductQuant : Template {
 
   ProductQuant() = default;
 
-  explicit ProductQuant(int32_t dim, int32_t sd = 4)
+  explicit ProductQuant(int32_t dim, int32_t sd = 8)
       : Template(dim / sd), d(dim), sd(sd), nsq(dim / sd), codebook(nsq) {}
 
   void train(const float *data, int32_t n) {
