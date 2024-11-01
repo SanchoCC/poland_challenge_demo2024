@@ -39,7 +39,7 @@ struct Tensor {
   }
 
   Tensor(int32_t n, int32_t dim, DataType dtype = DataType::fp32) {
-    align_width = 8; // was 1
+    align_width = 1;
     d = dalign = dim;
     if (dtype == DataType::fp32) {
       constexpr DataType dt = DataType::fp32;
