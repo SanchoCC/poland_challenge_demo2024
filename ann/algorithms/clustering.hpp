@@ -22,7 +22,7 @@ struct Clustering {
   using ComputerType =
       ComputerImpl<Tensor, helpa::l2_fp32_fp32, float, float, float, float>;
 
-  constexpr static int32_t kSampleNum = 40000;
+  constexpr static int32_t kSampleNum = 100000;
 
   enum class InitType {
     RANDOM = 0,
@@ -42,7 +42,7 @@ struct Clustering {
 
   Clustering() = default;
 
-  Clustering(int32_t n_cluster, int32_t epochs = 4,
+  Clustering(int32_t n_cluster, int32_t epochs = 10,
              const std::string &init = "kmeans++")
       : n_cluster(n_cluster), epochs(epochs), init_type(init_map.at(init)) {}
 
