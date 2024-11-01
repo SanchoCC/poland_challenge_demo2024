@@ -30,8 +30,9 @@ using IndexNSG = ann::NSG;
 std::unique_ptr<ann::GraphSearcherBase> searcher;
 
 void *ann_init(int K_features, int R, const char *metric){
+    R += 30;
     ann_R = R;
-    ann_L = R + 50;
+    ann_L = R + 50 + 30;
     std::string metricS(metric);
     IndexNSG *vidx = new IndexNSG(K_features, metricS, ann_R, ann_L);
     vidx->nndescent_iter = nndescent_iter;
