@@ -278,30 +278,18 @@ create_searcher(Graph<int32_t> graph, const std::string &metric,
   auto m = metric_map[metric];
   auto qua = quantizer_map[quantizer];
 
-  if (qua == QuantizerType::SQ8U) {
+  if (qua == QuantizerType::PQ8) {
     if (m == Metric::IP) {
-      RType ret =
-          std::make_unique<GraphSearcher<SQ8QuantizerUniform<Metric::IP>>>(
-              std::move(graph));
-      if (params::SQ8U_REFINE) {
-        ret = std::make_unique<Refiner<params::RefineQuantizer<Metric::IP>>>(
-            std::move(ret), params::SQ8U_REFINE_FACTOR);
-      }
+      RType ret = std::make_unique<GraphSearcher<SQ8QuantizerUniform<Metric::IP>>>(std::move(graph));
       return ret;
     } else if (m == Metric::L2) {
-      RType ret =
-          std::make_unique<GraphSearcher<SQ8QuantizerUniform<Metric::L2>>>(
-              std::move(graph));
-      if (params::SQ8U_REFINE) {
-        ret = std::make_unique<Refiner<params::RefineQuantizer<Metric::L2>>>(
-            std::move(ret), params::SQ8U_REFINE_FACTOR);
-      }
+      RType ret = std::make_unique<GraphSearcher<SQ8QuantizerUniform<Metric::L2>>>(std::move(graph));
       return ret;
     } else {
       printf("Metric not suppported\n");
       return nullptr;
     }
-  } else if (qua == QuantizerType::FP32) {
+  } else if (qua == QuantizerType::FP16) {
     if (m == Metric::IP) {
       RType ret = std::make_unique<GraphSearcher<FP32Quantizer<Metric::IP>>>(
           std::move(graph));
