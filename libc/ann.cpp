@@ -47,24 +47,20 @@ void ann_free(void *ptr){
     delete vidx;
 }
 
-void ann_add(void* ptr, int n, float* x, const char* store) {
-
-    IndexNSG* vidx = (IndexNSG*)ptr;
-    if (!is_load) {
+void ann_add(void *ptr, int n, float * x,  const char *store){
+    
+    IndexNSG *vidx = (IndexNSG *)ptr;
+    if(!is_load){
         vidx->Build(x, n);
     }
-
+    
 
     if (store != NULL) {
         vidx->final_graph.save(std::string(store));
     }
 
-    if (vidx->metric == "L2") {
-        searcher = std::move(ann::create_searcher(std::move(vidx->final_graph), vidx->metric, "SQ8U"));
-    } else if (vidx->metric == "IP") {
-        searcher = std::move(ann::create_searcher(std::move(vidx->final_graph), vidx->metric, "FP32"));
-    }
 
+    searcher = std::move(ann::create_searcher(std::move(vidx->final_graph), vidx->metric, "SQ8U"));
 
 
     searcher->SetData(x, n, vidx->d);
