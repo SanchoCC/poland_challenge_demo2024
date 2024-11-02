@@ -23,7 +23,7 @@ struct NSG : public Builder {
   int ep;
   Graph<int> final_graph;
   RandomGenerator rng; ///< random generator
-  DistFunc<int8_t, int8_t, int32_t> dist_func;
+  DistFunc<float, float, float> dist_func;
   int GK;
   int nndescent_S;
   int nndescent_R;
@@ -35,9 +35,11 @@ struct NSG : public Builder {
     this->C = R + 100;
     srand(0x1998);
     if (metric == "L2") {
-      dist_func = helpa::l2_s8_s8;
+      dist_func = helpa::l2_fp32_fp32;
     } else if (metric == "IP") {
-        dist_func = helpa::dot_s8_s8;
+      dist_func = [](const float *x, const float *y, const int32_t d) {
+        return helpa::dot_fp32_fp32(x, y, d);
+      };
     }
     this->GK = 64;
     this->nndescent_S = 10;
