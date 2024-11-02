@@ -306,6 +306,10 @@ create_searcher(Graph<int32_t> graph, const std::string &metric,
       RType ret = std::make_unique<GraphSearcher<FP32Quantizer<Metric::IP>>>(
           std::move(graph));
       return ret;
+    } else if (m == Metric::L2){
+        RType ret = std::make_unique<GraphSearcher<FP32Quantizer<Metric::L2>>>(
+            std::move(graph));
+        return ret;
     } else {
       printf("Metric not suppported\n");
       return nullptr;
