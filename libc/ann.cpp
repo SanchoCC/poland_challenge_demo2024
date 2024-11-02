@@ -60,9 +60,9 @@ void ann_add(void* ptr, int n, float* x, const char* store) {
     }
 
     if (vidx->metric == "L2") {
-        searcher = std::move(ann::create_searcher(std::move(vidx->final_graph), vidx->metric, "FP16"));
+        searcher = std::move(ann::create_searcher(std::move(vidx->final_graph), vidx->metric, "FP32"));
     } else if (vidx->metric == "IP") {
-        searcher = std::move(ann::create_searcher(std::move(vidx->final_graph), vidx->metric, "PQ8"));
+        searcher = std::move(ann::create_searcher(std::move(vidx->final_graph), vidx->metric, "SQ8U"));
     }
 
 
