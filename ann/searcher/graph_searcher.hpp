@@ -64,6 +64,34 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
   void SetData(const float *data, int32_t n, int32_t dim) override {
     this->nb = n;
     this->d = dim;
+    if (dim == 384) {
+        po = 8;
+        pl = 8;
+        graph_po = 20;
+        ef = 128;
+        kOptimizePoints = 40000;
+        kTryPos = 20;
+        kTryPls = 20;
+        kTryK = 20;
+    } else if (dim == 200) {
+        po = 4;
+        pl = 4;
+        graph_po = 6;
+        ef = 128;
+        kOptimizePoints = 20000;
+        kTryPos = 10;
+        kTryPls = 10;
+        kTryK = 10;
+    } else {
+        po = 6;
+        pl = 6;
+        graph_po = 18;
+        ef = 128;
+        kOptimizePoints = 20000;
+        kTryPos = 10;
+        kTryPls = 10;
+        kTryK = 10;
+    }
     quant = Quant(d);
     //printf("Starting quantizer training\n");
     auto t1 = std::chrono::high_resolution_clock::now();
