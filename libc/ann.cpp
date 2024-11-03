@@ -71,19 +71,27 @@ void set_ann_ef(void *ptr, int ann_ef){
     searcher->SetEf(ann_ef);
 }
 
+void ann_search(void* ptr, int n, const float* x, int k, float* distances,
+    int32_t* labels, int num_p) {
+    IndexNSG* vidx = (IndexNSG*)ptr;
 
-void ann_search(void *ptr, int n, const float* x, int k, float* distances,
-                int32_t* labels, int num_p){
-    IndexNSG *vidx = (IndexNSG *)ptr;
-    // 调用c++函数
+    int32_t* all_labels = new int32_t[n * k];
+    float* all_distances = new float[n * k];
+
 #pragma omp parallel for num_threads(num_p)
     for (int i = 0; i < n; ++i) {
         size_t offset = i * vidx->d;
-        searcher->Search(x + offset, k, labels + i * k);
+        searcher->SearchBatch(x + i * vidx->d, 1, k, all_labels + i * k, all_distances + i * k);
     }
+
+    for (int i = 0; i < n; ++i) {
+        std::copy(all_labels + i * k, all_labels + (i + 1) * k, labels + i * k);
+        std::copy(all_distances + i * k, all_distances + (i + 1) * k, distances + i * k);
+    }
+
+    delete[] all_labels;
+    delete[] all_distances;
 }
-
-
 
 void ann_load(void *ptr, const char *path){
     IndexNSG *vidx = (IndexNSG *)ptr;
