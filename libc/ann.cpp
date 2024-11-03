@@ -33,6 +33,27 @@ void *ann_init(int K_features, int R, const char *metric){
     ann_R = R + 80;
     ann_L = R + 20;
     std::string metricS(metric);
+    if (metricS == "L2") {
+        nndescent_iter = 15;
+        nndescent_GK = 200;
+        nndescent_S = 10;
+        nndescent_R = 120;
+        nndescent_L = 220;
+
+        ann_R = 130;
+        ann_M = 8;
+        ann_L = 100;
+    } else if (metricS == "IP") {
+        nndescent_iter = 10;
+        nndescent_GK = 100;
+        nndescent_S = 5;
+        nndescent_R = 80;
+        nndescent_L = 150;
+
+        ann_R = 120;
+        ann_M = 8;
+        ann_L = 90;
+    }
     IndexNSG *vidx = new IndexNSG(K_features, metricS, ann_R, ann_L);
     vidx->nndescent_iter = nndescent_iter;
     vidx->GK = nndescent_GK;
