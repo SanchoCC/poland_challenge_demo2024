@@ -8,7 +8,6 @@
 #include "ann/builder.hpp"
 #include "ann/nsg/nsg.hpp"
 #include "ann/searcher/graph_searcher.hpp"
-#include "ann/hnsw/hnsw.hpp"
 
 
 
@@ -28,7 +27,6 @@ bool is_load = 0;
 
 
 using IndexNSG = ann::NSG;
-using IndexHNSW = ann::HNSW<ann::FP32Quantizer<ann::Metric::IP>>;
 std::unique_ptr<ann::GraphSearcherBase> searcher;
 
 void *ann_init(int K_features, int R, const char *metric){
@@ -36,18 +34,11 @@ void *ann_init(int K_features, int R, const char *metric){
     ann_L = R + 20;
     std::string metricS(metric);
     IndexNSG *vidx = new IndexNSG(K_features, metricS, ann_R, ann_L);
-    if (metric == "IP") {
-        void* vidx1 = ann::create_hnsw("IP", "FP32", K_features, ann_R, ann_L).release();
-        IndexHNSW* test = static_cast<IndexHNSW*>(vidx1);
-        
-    }
     vidx->nndescent_iter = nndescent_iter;
     vidx->GK = nndescent_GK;
     vidx->nndescent_S = nndescent_S;
     vidx->nndescent_R = nndescent_R;
     vidx->nndescent_L = nndescent_L;
-
-
     return (void *)vidx;
 }
 
