@@ -8,8 +8,6 @@
 #include "ann/builder.hpp"
 #include "ann/nsg/nsg.hpp"
 #include "ann/searcher/graph_searcher.hpp"
-#include "ann/hnsw/hnsw.hpp"
-#include "ann/quant/quant.hpp"
 
 
 
@@ -25,59 +23,78 @@ int ann_L = 100;
 
 bool is_load = 0;
 
+
+
+
+using IndexNSG = ann::NSG;
 std::unique_ptr<ann::GraphSearcherBase> searcher;
 
-void* ann_init(int K_features, int R, const char* metric) {
+void *ann_init(int K_features, int R, const char *metric){
+    ann_R = R + 80;
+    ann_L = R + 20;
     std::string metricS(metric);
-    return (void*)ann::create_hnsw(metricS, "FP16", K_features, R, R + 100).release();
+    IndexNSG *vidx = new IndexNSG(K_features, metricS, ann_R, ann_L);
+    vidx->nndescent_iter = nndescent_iter;
+    vidx->GK = nndescent_GK;
+    vidx->nndescent_S = nndescent_S;
+    vidx->nndescent_R = nndescent_R;
+    vidx->nndescent_L = nndescent_L;
+    return (void *)vidx;
 }
 
-void ann_free(void* ptr) {
-    auto* hnsw = static_cast<ann::HNSW<ann::FP16Quantizer<ann::Metric::L2>>*>(ptr);
-    delete hnsw;
+void ann_free(void *ptr){
+    IndexNSG *vidx = (IndexNSG *) ptr;
+    delete vidx;
 }
 
-void ann_add(void* ptr, int n, float* x, const char* store) {
-    auto* hnsw = static_cast<ann::HNSW<ann::FP16Quantizer<ann::Metric::L2>>*>(ptr);
+void ann_add(void *ptr, int n, float * x,  const char *store){
+    
+    IndexNSG *vidx = (IndexNSG *)ptr;
+    if(!is_load){
+        vidx->Build(x, n);
+    }
+    
 
-    if (!is_load) {
-        hnsw->Build(x, n);
+    if (store != NULL) {
+        vidx->final_graph.save(std::string(store));
     }
 
-    if (store != nullptr) {
-        hnsw->final_graph.save(std::string(store));
-    }
 
-    if (hnsw->quant.metric() == ann::Metric::L2) {
-        searcher = std::move(ann::create_searcher(std::move(hnsw->final_graph), "L2", "FP16"));
-    } else if (hnsw->quant.metric() == ann::Metric::IP) {
-        searcher = std::move(ann::create_searcher(std::move(hnsw->final_graph), "IP", "FP16"));
-    }
+    searcher = std::move(ann::create_searcher(std::move(vidx->final_graph), vidx->metric, "SQ8U"));
 
-    searcher->SetData(x, n, hnsw->quant.dim());
+
+    searcher->SetData(x, n, vidx->d);
 }
 
-void set_ann_ef(void* ptr, int ann_ef) {
+void set_ann_ef(void *ptr, int ann_ef){
+    IndexNSG *vidx = (IndexNSG *)ptr;
     searcher->SetEf(ann_ef);
 }
 
-void ann_search(void* ptr, int n, const float* x, int k, float* distances, int32_t* labels, int num_p) {
-    auto* hnsw = static_cast<ann::HNSW<ann::FP16Quantizer<ann::Metric::L2>>*>(ptr);
 
+void ann_search(void *ptr, int n, const float* x, int k, float* distances,
+                int32_t* labels, int num_p){
+    IndexNSG *vidx = (IndexNSG *)ptr;
+    // 调用c++函数
 #pragma omp parallel for num_threads(num_p)
     for (int i = 0; i < n; ++i) {
-        size_t offset = i * hnsw->quant.dim();
+        size_t offset = i * vidx->d;
         searcher->Search(x + offset, k, labels + i * k);
     }
 }
 
-void ann_load(void* ptr, const char* path) {
-    auto* hnsw = static_cast<ann::HNSW<ann::FP16Quantizer<ann::Metric::L2>>*>(ptr);
-    hnsw->final_graph.load(std::string(path));
-    is_load = true;
+
+
+void ann_load(void *ptr, const char *path){
+    IndexNSG *vidx = (IndexNSG *)ptr;
+    vidx->final_graph.load(std::string(path));
+    is_load = 1;
+    
 }
 
-void ann_save(void* ptr, const char* path) {
-    auto* hnsw = static_cast<ann::HNSW<ann::FP16Quantizer<ann::Metric::L2>>*>(ptr);
-    hnsw->final_graph.save(std::string(path));
+void ann_save(void *ptr, const char *path){
+    IndexNSG *vidx = (IndexNSG *)ptr;
+    vidx->final_graph.save(std::string(path));
 }
+
+
