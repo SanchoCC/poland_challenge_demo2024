@@ -25,7 +25,7 @@ constexpr inline bool SQ4UA_REFINE = true;
 constexpr inline bool PQ8_REFINE = true;
 
 constexpr inline int32_t SQ8_REFINE_FACTOR = 10;
-constexpr inline int32_t SQ8U_REFINE_FACTOR = 5;
+constexpr inline int32_t SQ8U_REFINE_FACTOR = 10;
 constexpr inline int32_t SQ8P_REFINE_FACTOR = 15;
 constexpr inline int32_t SQ4U_REFINE_FACTOR = 10;
 constexpr inline int32_t SQ4UA_REFINE_FACTOR = 10;
