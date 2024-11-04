@@ -52,9 +52,9 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
 
   // Optimization parameters
   constexpr static int32_t kOptimizePoints = 30000;// was 1500 -> 10000
-  constexpr static int32_t kTryPos = 15;
-  constexpr static int32_t kTryPls = 15;
-  constexpr static int32_t kTryK = 15;
+  constexpr static int32_t kTryPos = 1;
+  constexpr static int32_t kTryPls = 1;
+  constexpr static int32_t kTryK = 1;
   int32_t sample_points_num;
   std::vector<float> optimize_queries;
 
@@ -123,7 +123,7 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
         }
       }
     }
-    float baseline_ela;
+    /*float baseline_ela;
     {
       this->po = 1;
       this->pl = 1;
@@ -147,7 +147,7 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
            "%6.2f%% performance improvement wrt slow\n============="
            "Done optimization=============\n",
            best_po, best_pl, 100.0 * (baseline_ela / min_ela - 1),
-           100.0 * (slow_ela / min_ela - 1));
+           100.0 * (slow_ela / min_ela - 1));*/
     this->po = best_po;
     this->pl = best_pl;
     std::vector<float>().swap(optimize_queries);
