@@ -11,7 +11,7 @@ struct ProductQuant : Template {
   using type = ProductQuant;
   using data_type = uint8_t;
 
-  constexpr static int32_t K = 256;
+  constexpr static int32_t K = 1024;
   int32_t d;
   int32_t sd;
   int32_t nsq;
