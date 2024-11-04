@@ -52,9 +52,9 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
 
   // Optimization parameters
   constexpr static int32_t kOptimizePoints = 30000;// was 1500 -> 10000
-  constexpr static int32_t kTryPos = 2;
-  constexpr static int32_t kTryPls = 2;
-  constexpr static int32_t kTryK = 2;
+  constexpr static int32_t kTryPos = 15;
+  constexpr static int32_t kTryPls = 15;
+  constexpr static int32_t kTryK = 15;
   int32_t sample_points_num;
   std::vector<float> optimize_queries;
 
@@ -82,7 +82,6 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
       memcpy(optimize_queries.data() + (int64_t)i * d,
              data + (int64_t)sample_points[i] * d, d * sizeof(float));
     }
-    Optimize();
   }
 
   void SetEf(int32_t ef) override { this->ef = ef; }
