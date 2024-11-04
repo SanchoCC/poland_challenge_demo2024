@@ -51,10 +51,10 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
   int32_t graph_po = 18; // was 2
 
   // Optimization parameters
-  constexpr static int32_t kOptimizePoints = 10000;// was 1500 -> 10000
-  constexpr static int32_t kTryPos = 10;
-  constexpr static int32_t kTryPls = 10;
-  constexpr static int32_t kTryK = 10;
+  constexpr static int32_t kOptimizePoints = 30000;// was 1500 -> 10000
+  constexpr static int32_t kTryPos = 2;
+  constexpr static int32_t kTryPls = 2;
+  constexpr static int32_t kTryK = 2;
   int32_t sample_points_num;
   std::vector<float> optimize_queries;
 
@@ -123,8 +123,32 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
           best_pl = try_pl;
         }
       }
-    }    
-    
+    }
+    float baseline_ela;
+    {
+      this->po = 1;
+      this->pl = 1;
+      auto st = std::chrono::high_resolution_clock::now();
+      f();
+      auto ed = std::chrono::high_resolution_clock::now();
+      baseline_ela = std::chrono::duration<double>(ed - st).count();
+    }
+    float slow_ela;
+    {
+      this->po = 0;
+      this->pl = 0;
+      auto st = std::chrono::high_resolution_clock::now();
+      f();
+      auto ed = std::chrono::high_resolution_clock::now();
+      slow_ela = std::chrono::duration<double>(ed - st).count();
+    }
+
+    printf("settint best po = %d, best pl = %d\n"
+           "gaining %6.2f%% performance improvement wrt baseline\ngaining "
+           "%6.2f%% performance improvement wrt slow\n============="
+           "Done optimization=============\n",
+           best_po, best_pl, 100.0 * (baseline_ela / min_ela - 1),
+           100.0 * (slow_ela / min_ela - 1));
     this->po = best_po;
     this->pl = best_pl;
     std::vector<float>().swap(optimize_queries);
