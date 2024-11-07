@@ -46,15 +46,15 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
   int32_t ef = 128;
 
   // Memory prefetch parameters
-  int32_t po = 6; // was 2
-  int32_t pl = 6; // was 2
-  int32_t graph_po = 18; // was 2
+  int32_t po = 2; // was 2
+  int32_t pl = 2; // was 2
+  int32_t graph_po = 8; // was 2
 
   // Optimization parameters
-  constexpr static int32_t kOptimizePoints = 30000;// was 1500 -> 10000
-  constexpr static int32_t kTryPos = 15;
-  constexpr static int32_t kTryPls = 15;
-  constexpr static int32_t kTryK = 15;
+  constexpr static int32_t kOptimizePoints = 10000;// was 1500 -> 10000
+  constexpr static int32_t kTryPos = 12;
+  constexpr static int32_t kTryPls = 12;
+  constexpr static int32_t kTryK = 12;
   int32_t sample_points_num;
   std::vector<float> optimize_queries;
 
@@ -82,6 +82,7 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
       memcpy(optimize_queries.data() + (int64_t)i * d,
              data + (int64_t)sample_points[i] * d, d * sizeof(float));
     }
+    Optimize();
   }
 
   void SetEf(int32_t ef) override { this->ef = ef; }
