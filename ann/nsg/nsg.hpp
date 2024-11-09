@@ -79,20 +79,6 @@ struct NSG : public Builder {
           }
       }
     }
-    [[maybe_unused]] int num_attached = tree_grow(degrees);
-    int max = 0, min = 1e6;
-    double avg = 0;
-    for (int i = 0; i < n; ++i) {
-        int size = 0;
-        while (size < R && final_graph.at(i, size) != EMPTY_ID) {
-            ++size;
-        }
-        max = std::max(size, max);
-        min = std::min(size, min);
-        avg += size;
-    }
-    avg = avg / n;
-    //printf("Degree Statistics: Max = %d, Min = %d, Avg = %lf\n", max, min, avg);
   }
 
   Graph<int> GetGraph() override { return std::move(final_graph); }
