@@ -9,6 +9,7 @@
 #include "ann/neighbor.hpp"
 #include "ann/utils.hpp"
 #include "nndescent.hpp"
+#include "ann/simd/scalar.hpp"
 
 namespace ann {
 
@@ -23,7 +24,7 @@ struct NSG : public Builder {
   int ep;
   Graph<int> final_graph;
   RandomGenerator rng; ///< random generator
-  DistFunc<float, float, float> dist_func;
+  DistFunc<uint8_t, int8_t, int32_t> dist_func;
   int GK;
   int nndescent_S;
   int nndescent_R;
@@ -33,12 +34,9 @@ struct NSG : public Builder {
   explicit NSG(int dim, const std::string &metric, int R = 32, int L = 200)
       : d(dim), metric(metric), R(R), L(L), rng(0x0903) {
     this->C = R + 100;
-    srand(0x1998);
-    if (metric == "L2") {
-      dist_func = helpa::l2_fp32_fp32;
-    } else if (metric == "IP") {
-      dist_func = [](const float *x, const float *y, const int32_t d) {
-        return helpa::dot_fp32_fp32(x, y, d);
+    if (metric == "IP") {
+      dist_func = [](const uint8_t *x, const int8_t *y, const int32_t d) {
+        return helpa::dota_u8_s8(x, y, d);
       };
     }
     this->GK = 64;
