@@ -144,67 +144,67 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
       }
     }
 
-     inference::Bitset<> vis(nb);
-     auto computer = quant.get_computer(q);
-     alignas(64) int32_t edge_buf[graph.K];
-     using dist_t = typename Quant::ComputerType::dist_type;
-     std::priority_queue<std::pair<dist_t, int32_t>,
-                         std::vector<std::pair<dist_t, int32_t>>>
-         top_candidates;
-     std::priority_queue<std::pair<dist_t, int32_t>,
-                         std::vector<std::pair<dist_t, int32_t>>>
-         candidate_set;
+    // inference::Bitset<> vis(nb);
+    // auto computer = quant.get_computer(q);
+    // alignas(64) int32_t edge_buf[graph.K];
+    // using dist_t = typename Quant::ComputerType::dist_type;
+    // std::priority_queue<std::pair<dist_t, int32_t>,
+    //                     std::vector<std::pair<dist_t, int32_t>>>
+    //     top_candidates;
+    // std::priority_queue<std::pair<dist_t, int32_t>,
+    //                     std::vector<std::pair<dist_t, int32_t>>>
+    //     candidate_set;
 
-     int32_t ep = graph.eps[0];
-     dist_t ep_d = computer(ep);
-     dist_t lowerBound = ep_d;
-     top_candidates.emplace(ep_d, ep);
-     candidate_set.emplace(-ep_d, ep);
-     while (!candidate_set.empty()) {
-       auto [d, u] = candidate_set.top();
-       graph.prefetch(u, graph_po);
-       if (-d > lowerBound && top_candidates.size() == ef) {
-         break;
-       }
-       candidate_set.pop();
-       int32_t edge_size = 0;
-       for (int32_t i = 0; i < graph.K; ++i) {
-         int32_t v = graph.at(u, i);
-         if (v == -1) {
-           break;
-         }
-         if (vis.get(v)) {
-           continue;
-         }
-         vis.set(v);
-         edge_buf[edge_size++] = v;
-       }
-       for (int i = 0; i < std::min(po, edge_size); ++i) {
-         computer.prefetch(edge_buf[i], pl);
-       }
-       for (int i = 0; i < edge_size; ++i) {
-         if (i + po < edge_size) {
-           computer.prefetch(edge_buf[i + po], pl);
-         }
-         auto v = edge_buf[i];
-         auto cur_dist = computer(v);
-         if (top_candidates.size() < ef || lowerBound > cur_dist) {
-           candidate_set.emplace(-cur_dist, v);
-           top_candidates.emplace(cur_dist, v);
-           if (top_candidates.size() > ef) {
-             top_candidates.pop();
-           }
-           lowerBound = top_candidates.top().first;
-         }
-       }
-     }
-     while (top_candidates.size() > k) {
-       top_candidates.pop();
-     }
-     for (int sz = top_candidates.size() - 1; sz >= 0; --sz) {
-       ids[sz] = top_candidates.top().second;
-       top_candidates.pop();
-     }
+    // int32_t ep = graph.eps[0];
+    // dist_t ep_d = computer(ep);
+    // dist_t lowerBound = ep_d;
+    // top_candidates.emplace(ep_d, ep);
+    // candidate_set.emplace(-ep_d, ep);
+    // while (!candidate_set.empty()) {
+    //   auto [d, u] = candidate_set.top();
+    //   graph.prefetch(u, graph_po);
+    //   if (-d > lowerBound && top_candidates.size() == ef) {
+    //     break;
+    //   }
+    //   candidate_set.pop();
+    //   int32_t edge_size = 0;
+    //   for (int32_t i = 0; i < graph.K; ++i) {
+    //     int32_t v = graph.at(u, i);
+    //     if (v == -1) {
+    //       break;
+    //     }
+    //     if (vis.get(v)) {
+    //       continue;
+    //     }
+    //     vis.set(v);
+    //     edge_buf[edge_size++] = v;
+    //   }
+    //   for (int i = 0; i < std::min(po, edge_size); ++i) {
+    //     computer.prefetch(edge_buf[i], pl);
+    //   }
+    //   for (int i = 0; i < edge_size; ++i) {
+    //     if (i + po < edge_size) {
+    //       computer.prefetch(edge_buf[i + po], pl);
+    //     }
+    //     auto v = edge_buf[i];
+    //     auto cur_dist = computer(v);
+    //     if (top_candidates.size() < ef || lowerBound > cur_dist) {
+    //       candidate_set.emplace(-cur_dist, v);
+    //       top_candidates.emplace(cur_dist, v);
+    //       if (top_candidates.size() > ef) {
+    //         top_candidates.pop();
+    //       }
+    //       lowerBound = top_candidates.top().first;
+    //     }
+    //   }
+    // }
+    // while (top_candidates.size() > k) {
+    //   top_candidates.pop();
+    // }
+    // for (int sz = top_candidates.size() - 1; sz >= 0; --sz) {
+    //   ids[sz] = top_candidates.top().second;
+    //   top_candidates.pop();
+    // }
   }
 
   void SearchBatch(const float *q, int32_t nq, int32_t k, int32_t *ids,
