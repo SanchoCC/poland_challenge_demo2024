@@ -102,21 +102,27 @@ struct NNDescent {
   }
 
   void Build(const float *data, int n, int K) {
-    this->data = data;
-    this->nb = n;
-    this->K = K;
-    this->L = K + 50;
-    Init();
-    Descent();
-    final_graph.init(n, K);
-    for (int i = 0; i < nb; i++) {
-      std::sort(graph[i].pool.begin(), graph[i].pool.end());
-      for (int j = 0; j < K; j++) {
-        final_graph.at(i, j) = graph[i].pool[j].id;
-      }
+  this->data = data;
+  this->nb = n;
+  this->K = K;
+  this->L = K + 50;
+  Init();
+  Descent();
+  final_graph.init(n, K);
+
+  #pragma omp parallel for
+  for (int i = 0; i < nb; i++) {
+    std::nth_element(graph[i].pool.begin(), graph[i].pool.begin() + K, graph[i].pool.end());
+    
+    for (int j = 0; j < K; j++) {
+      final_graph.at(i, j) = graph[i].pool[j].id;
     }
-    std::vector<Nhood>().swap(graph);
   }
+
+  graph.clear();
+  graph.shrink_to_fit();
+}
+
 
   void Init() {
     graph.reserve(nb);
@@ -157,7 +163,7 @@ struct NNDescent {
     for (int iter = 1; iter <= iters; ++iter) {
       Join();
       Update();
-      float recall = EvalRecall(eval_points, eval_gt);
+      /*float recall = EvalRecall(eval_points, eval_gt);*/
       //printf("NNDescent iter: [%d/%d], recall: %f\n", iter, iters, recall);
     }
     auto t2 = std::chrono::high_resolution_clock::now();
