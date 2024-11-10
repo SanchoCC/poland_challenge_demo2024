@@ -14,7 +14,7 @@
 int nndescent_iter = 15;
 int nndescent_GK = 200;
 int nndescent_S = 10;
-int nndescent_R = 100;
+int nndescent_R = 300;
 int nndescent_L = 200;
 
 int ann_R = 50;
