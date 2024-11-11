@@ -193,7 +193,7 @@ struct NNDescent {
 #pragma omp parallel for
     for (int n = 0; n < nb; ++n) {
       auto &nn = graph[n];
-      std::sort(nn.pool.begin(), nn.pool.end());
+      std::partial_sort(nn.pool.begin(), nn.pool.begin() + L, nn.pool.end());
       if ((int)nn.pool.size() > L) {
         nn.pool.resize(L);
       }
