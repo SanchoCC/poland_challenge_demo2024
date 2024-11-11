@@ -172,22 +172,16 @@ struct NNDescent {
   }
 
   void Join() {
-#pragma omp parallel
-      {
-#pragma omp single
-          for (int u = 0; u < nb; u++) {
-#pragma omp task
-              {
-                  graph[u].join([&](int i, int j) {
-                      if (i != j) {
-                          float dist = dist_func(data + i * d, data + j * d, d);
-                          graph[i].insert(j, dist);
-                          graph[j].insert(i, dist);
-                      }
-                      });
-              }
-          }
-      }
+#pragma omp parallel for default(shared) schedule(dynamic, 100)
+    for (int u = 0; u < nb; u++) {
+      graph[u].join([&](int i, int j) {
+        if (i != j) {
+          float dist = dist_func(data + i * d, data + j * d, d);
+          graph[i].insert(j, dist);
+          graph[j].insert(i, dist);
+        }
+      });
+    }
   }
 
   void Update() {
