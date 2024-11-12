@@ -339,37 +339,42 @@
         return num_attached;
       }
 
-      int dfs(std::vector<bool> &vis, int root, int cnt) const {
-        int node = root;
-        std::stack<int> stack;
-        stack.push(root);
-        if (vis[root]) {
-          cnt++;
-        }
-        vis[root] = true;
-        while (!stack.empty()) {
-          int next = EMPTY_ID;
-          for (int i = 0; i < R; i++) {
-            int id = final_graph.at(node, i);
-            if (id != EMPTY_ID && !vis[id]) {
-              next = id;
-              break;
-            }
+      int dfs(std::vector<bool>& vis, int root, int cnt) const {
+          int node = root;
+          std::stack<int> stack;
+          stack.push(root);
+          if (vis[root]) {
+              cnt++;
           }
-          if (next == EMPTY_ID) {
-            stack.pop();
-            if (stack.empty()) {
-              break;
-            }
-            node = stack.top();
-            continue;
+          vis[root] = true;
+
+#pragma omp parallel
+          {
+              while (!stack.empty()) {
+                  int next = EMPTY_ID;
+#pragma omp for
+                  for (int i = 0; i < R; i++) {
+                      int id = final_graph.at(node, i);
+                      if (id != EMPTY_ID && !vis[id]) {
+                          next = id;
+                          break;
+                      }
+                  }
+                  if (next == EMPTY_ID) {
+                      stack.pop();
+                      if (stack.empty()) {
+                          break;
+                      }
+                      node = stack.top();
+                      continue;
+                  }
+                  node = next;
+                  vis[node] = true;
+                  stack.push(node);
+                  cnt++;
+              }
           }
-          node = next;
-          vis[node] = true;
-          stack.push(node);
-          cnt++;
-        }
-        return cnt;
+          return cnt;
       }
 
       int attach_unlinked(std::vector<bool>& vis, std::vector<bool>& vis2,
