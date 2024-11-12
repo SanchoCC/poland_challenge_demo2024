@@ -34,7 +34,7 @@ ann_INLINE inline void prefetch_L3(const void *address) {
 
 inline void mem_prefetch(char *ptr, const int num_lines) {
   for (int i = 0; i < num_lines; i += 1) {
-    prefetch_L1(ptr + i * 64);
+    prefetch_L2(ptr + i * 64);
   }
   // switch (num_lines) {
   // default:
