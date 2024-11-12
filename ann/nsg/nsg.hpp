@@ -247,79 +247,78 @@
           }
       }
 
-      void add_reverse_links(int q, std::vector<std::mutex> &locks,
-                             Graph<Node> &graph) {
-        for (int i = 0; i < R; i++) {
-          if (graph.at(q, i).id == EMPTY_ID) {
-            break;
-          }
-
-          Node sn(q, graph.at(q, i).distance);
-          int des = graph.at(q, i).id;
-
-          std::vector<Node> tmp_pool;
-          int dup = 0;
-          {
-            LockGuard guard(locks[des]);
-            for (int j = 0; j < R; j++) {
-              if (graph.at(des, j).id == EMPTY_ID) {
-                break;
-              }
-              if (q == graph.at(des, j).id) {
-                dup = 1;
-                break;
-              }
-              tmp_pool.push_back(graph.at(des, j));
-            }
-          }
-
-          if (dup) {
-            continue;
-          }
-
-          tmp_pool.push_back(sn);
-          if ((int)tmp_pool.size() > R) {
-            std::vector<Node> result;
-            int start = 0;
-            std::sort(tmp_pool.begin(), tmp_pool.end());
-            result.push_back(tmp_pool[start]);
-
-            while ((int)result.size() < R && (++start) < (int)tmp_pool.size()) {
-              auto &p = tmp_pool[start];
-              bool occlude = false;
-              for (int t = 0; t < (int)result.size(); t++) {
-                if (p.id == result[t].id) {
-                  occlude = true;
+      void add_reverse_links(int q, std::vector<std::mutex>& locks, Graph<Node>& graph) {
+          for (int i = 0; i < R; i++) {
+              if (graph.at(q, i).id == EMPTY_ID) {
                   break;
-                }
-                float djk = dist_func(data + result[t].id * d, data + p.id * d, d);
-                if (djk < p.distance /* dik */) {
-                  occlude = true;
-                  break;
-                }
               }
-              if (!occlude) {
-                result.push_back(p);
-              }
-            }
 
-            {
-              LockGuard guard(locks[des]);
-              for (int t = 0; t < (int)result.size(); t++) {
-                graph.at(des, t) = result[t];
-              }
-            }
+              Node sn(q, graph.at(q, i).distance);
+              int des = graph.at(q, i).id;
 
-          } else {
-            LockGuard guard(locks[des]);
-            for (int t = 0; t < R; t++) {
-              if (graph.at(des, t).id == EMPTY_ID) {
-                graph.at(des, t) = sn;
-                break;
+              std::vector<Node> tmp_pool;
+              int dup = 0;
+              {
+                  LockGuard guard(locks[des]);
+                  for (int j = 0; j < R; j++) {
+                      if (graph.at(des, j).id == EMPTY_ID) {
+                          break;
+                      }
+                      if (q == graph.at(des, j).id) {
+                          dup = 1;
+                          break;
+                      }
+                      tmp_pool.push_back(graph.at(des, j));
+                  }
               }
-            }
+
+              if (dup) {
+                  continue;
+              }
+
+              tmp_pool.push_back(sn);
+              if ((int)tmp_pool.size() > R) {
+                  std::vector<Node> result;
+                  int start = 0;
+                  std::sort(tmp_pool.begin(), tmp_pool.end());
+                  result.push_back(tmp_pool[start]);
+
+                  while ((int)result.size() < R && (++start) < (int)tmp_pool.size()) {
+                      auto& p = tmp_pool[start];
+                      bool occlude = false;
+                      for (int t = 0; t < (int)result.size(); t++) {
+                          if (p.id == result[t].id) {
+                              occlude = true;
+                              break;
+                          }
+                          float djk = dist_func(data + result[t].id * d, data + p.id * d, d);
+                          if (djk < p.distance /* dik */) {
+                              occlude = true;
+                              break;
+                          }
+                      }
+                      if (!occlude) {
+                          result.push_back(p);
+                      }
+                  }
+
+                  {
+                      LockGuard guard(locks[des]);
+                      for (int t = 0; t < (int)result.size(); t++) {
+                          graph.at(des, t) = result[t];
+                      }
+                  }
+
+              } else {
+                  LockGuard guard(locks[des]);
+                  for (int t = 0; t < R; t++) {
+                      if (graph.at(des, t).id == EMPTY_ID) {
+                          graph.at(des, t) = sn;
+                          break;
+                      }
+                  }
+              }
           }
-        }
       }
 
       int tree_grow(std::vector<int> &degrees) {
