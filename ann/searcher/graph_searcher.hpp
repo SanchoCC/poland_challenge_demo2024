@@ -66,7 +66,6 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
       this->d = dim;
       quant = Quant(d);
 
-      // Параллельная обработка данных для обучения и добавления
 #pragma omp parallel
       {
           quant.train(data, n);
@@ -224,36 +223,42 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
     }
   }
 
-  void SearchImpl(inference::NeighborPoolConcept auto &pool,
-                  ComputerConcept auto &computer) const {
-    alignas(64) int32_t edge_buf[graph.K];
-    while (pool.has_next()) {
-      auto u = pool.pop();
-      graph.prefetch(u, graph_po);
-      int32_t edge_size = 0;
-      for (int32_t i = 0; i < graph.K; ++i) {
-        int32_t v = graph.at(u, i);
-        if (v == -1) {
-          break;
-        }
-        if (pool.is_visited(v)) {
-          continue;
-        }
-        pool.set_visited(v);
-        edge_buf[edge_size++] = v;
+  void SearchImpl(inference::NeighborPoolConcept auto& pool,
+      ComputerConcept auto& computer) const {
+      alignas(64) int32_t edge_buf[graph.K];
+
+      while (pool.has_next()) {
+          auto u = pool.pop();
+          graph.prefetch(u, graph_po);
+          int32_t edge_size = 0;
+
+#pragma omp parallel for
+          for (int32_t i = 0; i < graph.K; ++i) {
+              int32_t v = graph.at(u, i);
+              if (v == -1) {
+                  break;
+              }
+              if (pool.is_visited(v)) {
+                  continue;
+              }
+              pool.set_visited(v);
+              edge_buf[edge_size++] = v;
+          }
+
+          for (int i = 0; i < std::min(po, edge_size); ++i) {
+              computer.prefetch(edge_buf[i], pl);
+          }
+
+#pragma omp parallel for
+          for (int i = 0; i < edge_size; ++i) {
+              if (i + po < edge_size) {
+                  computer.prefetch(edge_buf[i + po], pl);
+              }
+              auto v = edge_buf[i];
+              auto cur_dist = computer(v);
+              pool.insert(v, cur_dist);
+          }
       }
-      for (int i = 0; i < std::min(po, edge_size); ++i) {
-        computer.prefetch(edge_buf[i], pl);
-      }
-      for (int i = 0; i < edge_size; ++i) {
-        if (i + po < edge_size) {
-          computer.prefetch(edge_buf[i + po], pl);
-        }
-        auto v = edge_buf[i];
-        auto cur_dist = computer(v);
-        pool.insert(v, cur_dist);
-      }
-    }
   }
 };
 
