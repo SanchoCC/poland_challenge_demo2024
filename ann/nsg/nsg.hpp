@@ -194,57 +194,57 @@
         }
       }
 
-      void sync_prune(int q, std::vector<Node>& pool, std::vector<bool>& vis,
-          const Graph<int>& knng, Graph<Node>& graph) {
-#pragma omp parallel for
-          for (int i = 0; i < knng.K; i++) {
-              int id = knng.at(q, i);
-              if (id < 0 || id >= nb || vis[id]) {
-                  continue;
-              }
-
-              float dist = dist_func(data + q * d, data + id * d, d);
-              pool.emplace_back(id, dist);
+      void sync_prune(int q, std::vector<Node> &pool, std::vector<bool> &vis,
+                      const Graph<int> &knng, Graph<Node> &graph) {
+        for (int i = 0; i < knng.K; i++) {
+          int id = knng.at(q, i);
+          if (id < 0 || id >= nb || vis[id]) {
+            continue;
           }
 
-          std::sort(pool.begin(), pool.end());
+          float dist = dist_func(data + q * d, data + id * d, d);
+          pool.emplace_back(id, dist);
+        }
 
-          std::vector<Node> result;
+        std::sort(pool.begin(), pool.end());
 
-          int start = 0;
-          if (pool[start].id == q) {
-              start++;
+        std::vector<Node> result;
+
+        int start = 0;
+        if (pool[start].id == q) {
+          start++;
+        }
+        result.push_back(pool[start]);
+
+        while ((int)result.size() < R && (++start) < (int)pool.size() &&
+               start < C) {
+          auto &p = pool[start];
+          bool occlude = false;
+          for (int t = 0; t < (int)result.size(); t++) {
+            if (p.id == result[t].id) {
+              occlude = true;
+              break;
+            }
+
+            float djk = dist_func(data + result[t].id * d, data + p.id * d, d);
+            if (djk < p.distance /* dik */) {
+              occlude = true;
+              break;
+            }
           }
-          result.push_back(pool[start]);
-
-          while ((int)result.size() < R && (++start) < (int)pool.size() && start < C) {
-              auto& p = pool[start];
-              bool occlude = false;
-              for (int t = 0; t < (int)result.size(); t++) {
-                  if (p.id == result[t].id) {
-                      occlude = true;
-                      break;
-                  }
-
-                  float djk = dist_func(data + result[t].id * d, data + p.id * d, d);
-                  if (djk < p.distance /* dik */) {
-                      occlude = true;
-                      break;
-                  }
-              }
-              if (!occlude) {
-                  result.push_back(p);
-              }
+          if (!occlude) {
+            result.push_back(p);
           }
+        }
 
-          for (int i = 0; i < R; i++) {
-              if (i < (int)result.size()) {
-                  graph.at(q, i).id = result[i].id;
-                  graph.at(q, i).distance = result[i].distance;
-              } else {
-                  graph.at(q, i).id = EMPTY_ID;
-              }
+        for (int i = 0; i < R; i++) {
+          if (i < (int)result.size()) {
+            graph.at(q, i).id = result[i].id;
+            graph.at(q, i).distance = result[i].distance;
+          } else {
+            graph.at(q, i).id = EMPTY_ID;
           }
+        }
       }
 
       void add_reverse_links(int q, std::vector<std::mutex> &locks,
