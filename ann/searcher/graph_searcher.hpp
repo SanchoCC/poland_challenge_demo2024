@@ -61,32 +61,28 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
   GraphSearcher(Graph<int32_t> g)
       : graph(std::move(g)), graph_po(graph.K / 16) {}
 
-  void SetData(const float* data, int32_t n, int32_t dim) override {
-      this->nb = n;
-      this->d = dim;
-      quant = Quant(d);
+  void SetData(const float *data, int32_t n, int32_t dim) override {
+    this->nb = n;
+    this->d = dim;
+    quant = Quant(d);
+    //printf("Starting quantizer training\n");
+    auto t1 = std::chrono::high_resolution_clock::now();
+    quant.train(data, n);
+    quant.add(data, n);
+    auto t2 = std::chrono::high_resolution_clock::now();
+    //printf("Done quantizer training, cost %.2lfs\n",
+    //       std::chrono::duration<double>(t2 - t1).count());
 
-      // Параллельная обработка данных для обучения и добавления
-#pragma omp parallel
-      {
-          quant.train(data, n);
-      }
-
-      quant.add(data, n);
-
-      sample_points_num = std::min(kOptimizePoints, nb - 1);
-      std::vector<int32_t> sample_points(sample_points_num);
-      std::mt19937 rng;
-      GenRandom(rng, sample_points.data(), sample_points_num, nb);
-      optimize_queries.resize((int64_t)sample_points_num * d);
-
-#pragma omp parallel for
-      for (int32_t i = 0; i < sample_points_num; ++i) {
-          memcpy(optimize_queries.data() + (int64_t)i * d,
-              data + (int64_t)sample_points[i] * d, d * sizeof(float));
-      }
-
-      Optimize();
+    sample_points_num = std::min(kOptimizePoints, nb - 1);
+    std::vector<int32_t> sample_points(sample_points_num);
+    std::mt19937 rng;
+    GenRandom(rng, sample_points.data(), sample_points_num, nb);
+    optimize_queries.resize((int64_t)sample_points_num * d);
+    for (int32_t i = 0; i < sample_points_num; ++i) {
+      memcpy(optimize_queries.data() + (int64_t)i * d,
+             data + (int64_t)sample_points[i] * d, d * sizeof(float));
+    }
+    Optimize();
   }
 
   void SetEf(int32_t ef) override { this->ef = ef; }
