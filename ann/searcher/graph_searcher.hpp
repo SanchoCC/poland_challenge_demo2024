@@ -78,6 +78,7 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
     std::mt19937 rng;
     GenRandom(rng, sample_points.data(), sample_points_num, nb);
     optimize_queries.resize((int64_t)sample_points_num * d);
+#pragma omp parallel for
     for (int32_t i = 0; i < sample_points_num; ++i) {
       memcpy(optimize_queries.data() + (int64_t)i * d,
              data + (int64_t)sample_points[i] * d, d * sizeof(float));

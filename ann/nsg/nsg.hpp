@@ -196,6 +196,7 @@ struct NSG : public Builder {
 
   void sync_prune(int q, std::vector<Node> &pool, std::vector<bool> &vis,
                   const Graph<int> &knng, Graph<Node> &graph) {
+#pragma omp parallel for
     for (int i = 0; i < knng.K; i++) {
       int id = knng.at(q, i);
       if (id < 0 || id >= nb || vis[id]) {
@@ -390,6 +391,7 @@ struct NSG : public Builder {
     std::sort(pool.begin(), pool.end());
     int node;
     bool found = false;
+#pragma omp parallel for
     for (int i = 0; i < (int)pool.size(); i++) {
       node = pool[i].id;
       if (degrees[node] < R && node != id) {
