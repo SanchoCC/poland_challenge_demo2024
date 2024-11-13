@@ -46,15 +46,15 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
   int32_t ef = 128;
 
   // Memory prefetch parameters
-  int32_t po = 2; // was 2
-  int32_t pl = 2; // was 2
-  int32_t graph_po = 8; // was 2
+  int32_t po = 2;
+  int32_t pl = 2;
+  int32_t graph_po = 12;
 
   // Optimization parameters
-  constexpr static int32_t kOptimizePoints = 10000;// was 1500 -> 10000
-  constexpr static int32_t kTryPos = 12;
-  constexpr static int32_t kTryPls = 12;
-  constexpr static int32_t kTryK = 12;
+  constexpr static int32_t kOptimizePoints = 15000;
+  constexpr static int32_t kTryPos = 8;
+  constexpr static int32_t kTryPls = 8;
+  constexpr static int32_t kTryK = 15;
   int32_t sample_points_num;
   std::vector<float> optimize_queries;
 
