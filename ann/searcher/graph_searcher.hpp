@@ -54,7 +54,7 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
   constexpr static int32_t kOptimizePoints = 10000;// was 1500 -> 10000
   constexpr static int32_t kTryPos = 12;
   constexpr static int32_t kTryPls = 12;
-  constexpr static int32_t kTryK = 12;
+  constexpr static int32_t kTryK = 10;
   int32_t sample_points_num;
   std::vector<float> optimize_queries;
 
