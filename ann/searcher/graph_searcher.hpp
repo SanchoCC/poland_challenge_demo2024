@@ -90,44 +90,49 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
   int32_t GetEf() const override { return ef; }
 
   void Optimize(int32_t = 0) override {
-    std::vector<int32_t> try_pos(std::min(kTryPos, graph.K));
-    std::vector<int32_t> try_pls(
-        std::min(kTryPls, (int32_t)upper_div(quant.code_size(), 64)));
-    std::iota(try_pos.begin(), try_pos.end(), 1);
-    std::iota(try_pls.begin(), try_pls.end(), 1);
-    std::vector<int32_t> dummy_dst(kTryK);
+      std::vector<int32_t> try_pos(std::min(kTryPos, graph.K));
+      std::vector<int32_t> try_pls(
+          std::min(kTryPls, (int32_t)upper_div(quant.code_size(), 64)));
+      std::iota(try_pos.begin(), try_pos.end(), 1);
+      std::iota(try_pls.begin(), try_pls.end(), 1);
+      std::vector<int32_t> dummy_dst(kTryK);
 
-    auto f = [&] {
+      auto f = [&] {
 #pragma omp parallel for schedule(dynamic)
-      for (int32_t i = 0; i < sample_points_num; ++i) {
-        Search(optimize_queries.data() + (int64_t)i * d, kTryK,
-               dummy_dst.data());
+          for (int32_t i = 0; i < sample_points_num; ++i) {
+              Search(optimize_queries.data() + (int64_t)i * d, kTryK,
+                  dummy_dst.data());
+          }
+          };
+
+      printf("=============Start optimization=============\n");
+
+      // warmup
+      f();
+
+      float min_ela = std::numeric_limits<float>::max();
+      int32_t best_po = 0, best_pl = 0;
+
+#pragma omp parallel for collapse(2) reduction(min:min_ela)
+      for (auto try_po : try_pos) {
+          for (auto try_pl : try_pls) {
+              this->po = try_po;
+              this->pl = try_pl;
+              auto st = std::chrono::high_resolution_clock::now();
+              f();
+              auto ed = std::chrono::high_resolution_clock::now();
+              auto ela = std::chrono::duration<double>(ed - st).count();
+              if (ela < min_ela) {
+                  min_ela = ela;
+                  best_po = try_po;
+                  best_pl = try_pl;
+              }
+          }
       }
-    };
-    printf("=============Start optimization=============\n");
-    // warmup
-    f();
-    float min_ela = std::numeric_limits<float>::max();
-    int32_t best_po = 0, best_pl = 0;
-    for (auto try_po : try_pos) {
-      for (auto try_pl : try_pls) {
-        this->po = try_po;
-        this->pl = try_pl;
-        auto st = std::chrono::high_resolution_clock::now();
-        f();
-        auto ed = std::chrono::high_resolution_clock::now();
-        auto ela = std::chrono::duration<double>(ed - st).count();
-        if (ela < min_ela) {
-          min_ela = ela;
-          best_po = try_po;
-          best_pl = try_pl;
-        }
-      }
-    }
-    
-    this->po = best_po;
-    this->pl = best_pl;
-    std::vector<float>().swap(optimize_queries);
+
+      this->po = best_po;
+      this->pl = best_pl;
+      std::vector<float>().swap(optimize_queries);
   }
 
   void Search(const float *q, int32_t k, int32_t *ids,
