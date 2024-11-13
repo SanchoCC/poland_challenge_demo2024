@@ -137,6 +137,11 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
       this->pl = best_pl;
       std::vector<float>().swap(optimize_queries);
   }
+    
+    this->po = best_po;
+    this->pl = best_pl;
+    std::vector<float>().swap(optimize_queries);
+  }
 
   void Search(const float *q, int32_t k, int32_t *ids,
               float *dis = nullptr) const override {
