@@ -110,7 +110,7 @@ struct NNDescent {
   Descent();
   final_graph.init(n, K);
 
-  #pragma omp parallel for
+  #pragma omp parallel for // try dynamic
   for (int i = 0; i < nb; i++) {
     std::nth_element(graph[i].pool.begin(), graph[i].pool.begin() + K, graph[i].pool.end());
     
@@ -135,7 +135,7 @@ struct NNDescent {
 #pragma omp parallel
     {
       std::mt19937 rng(random_seed * 7741 + omp_get_thread_num());
-#pragma omp for
+#pragma omp for // try staic, 10/guided, 10
       for (int i = 0; i < nb; ++i) {
         std::vector<int> tmp(S);
         GenRandom(rng, tmp.data(), S, nb);

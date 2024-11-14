@@ -76,7 +76,7 @@ void ann_search(void *ptr, int n, const float* x, int k, float* distances,
                 int32_t* labels, int num_p){
     IndexNSG *vidx = (IndexNSG *)ptr;
     // 调用c++函数
-#pragma omp parallel for schedule(dynamic, 10)
+#pragma omp parallel for schedule(dynamic, 10) // try static, 20/dynamic, 20
     for (int i = 0; i < n; ++i) {
         size_t offset = i * vidx->d;
         searcher->Search(x + offset, k, labels + i * k);
