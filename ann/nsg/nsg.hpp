@@ -172,7 +172,7 @@ struct NSG : public Builder {
   void link(const Graph<int> &knng, Graph<Node> &graph) {
     auto st = std::chrono::high_resolution_clock::now();
     std::atomic<int> cnt{0};
-#pragma omp parallel for schedule(dynamic, 10)
+#pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < nb; i++) {
       std::vector<Node> pool;
       std::vector<Neighbor> tmp;
@@ -188,7 +188,7 @@ struct NSG : public Builder {
     //printf("NSG building cost: %.2lfs\n", ela);
 
     std::vector<std::mutex> locks(nb);
-#pragma omp parallel for schedule(dynamic, 10)
+#pragma omp parallel for schedule(dynamic) // dynamic, 10
     for (int i = 0; i < nb; ++i) {
       add_reverse_links(i, locks, graph);
     }
