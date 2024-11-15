@@ -110,7 +110,7 @@ struct NNDescent {
   Descent();
   final_graph.init(n, K);
 
-  #pragma omp parallel for // try dynamic
+#pragma omp parallel for schedule(dynamic, 10)
   for (int i = 0; i < nb; i++) {
     std::nth_element(graph[i].pool.begin(), graph[i].pool.begin() + K, graph[i].pool.end());
     
@@ -135,7 +135,7 @@ struct NNDescent {
 #pragma omp parallel
     {
       std::mt19937 rng(random_seed * 7741 + omp_get_thread_num());
-#pragma omp for // try staic, 10/guided, 10
+#pragma omp for
       for (int i = 0; i < nb; ++i) {
         std::vector<int> tmp(S);
         GenRandom(rng, tmp.data(), S, nb);
@@ -172,7 +172,7 @@ struct NNDescent {
   }
 
   void Join() {
-#pragma omp parallel for default(shared) schedule(dynamic, 100)
+#pragma omp parallel for default(shared) schedule(dynamic, 50)
     for (int u = 0; u < nb; u++) {
       graph[u].join([&](int i, int j) {
         if (i != j) {
@@ -211,7 +211,7 @@ struct NNDescent {
 #pragma omp parallel
     {
       std::mt19937 rng(random_seed * 5081 + omp_get_thread_num());
-#pragma omp for
+#pragma omp for schedule(dynamic, 10)
       for (int n = 0; n < nb; ++n) {
         auto &node = graph[n];
         auto &nn_new = node.nn_new;
@@ -266,7 +266,7 @@ struct NNDescent {
 
   void GenEvalGt(const std::vector<int> &eval_set,
                  std::vector<std::vector<int>> &eval_gt) {
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic, 10)
     for (int i = 0; i < (int)eval_set.size(); i++) {
       std::vector<Neighbor> tmp;
       for (int j = 0; j < nb; j++) {

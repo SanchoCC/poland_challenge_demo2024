@@ -51,10 +51,10 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
   int32_t graph_po = 12;
 
   // Optimization parameters
-  constexpr static int32_t kOptimizePoints = 15000;
+  constexpr static int32_t kOptimizePoints = 10000;
   constexpr static int32_t kTryPos = 8;
   constexpr static int32_t kTryPls = 8;
-  constexpr static int32_t kTryK = 15;
+  constexpr static int32_t kTryK = 10;
   int32_t sample_points_num;
   std::vector<float> optimize_queries;
 
@@ -98,7 +98,7 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
     std::vector<int32_t> dummy_dst(kTryK);
 
     auto f = [&] {
-#pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for schedule(dynamic, 5)
       for (int32_t i = 0; i < sample_points_num; ++i) {
         Search(optimize_queries.data() + (int64_t)i * d, kTryK,
                dummy_dst.data());
