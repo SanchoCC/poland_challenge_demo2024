@@ -66,7 +66,7 @@ struct NSG : public Builder {
       final_graph.init(n, R);
       std::fill_n(final_graph.data, n * R, EMPTY_ID);
       final_graph.eps = {ep};
-#pragma omp parallel for // try guided, 10/static, 10
+#pragma omp parallel for
       for (int i = 0; i < n; ++i) {
           int cnt = 0;
           for (int j = 0; j < R; ++j) {
@@ -86,7 +86,7 @@ struct NSG : public Builder {
   void Init(const Graph<int>& knng) {
       std::vector<float> center(d, 0.0f);
       float inv_nb = 1.0f / nb;
-#pragma omp parallel for // try guided, 10/static, 10
+#pragma omp parallel for
       for (int j = 0; j < d; j++) {
           float sum = 0.0f;
           for (int i = 0; i < nb; i++) {
@@ -188,7 +188,7 @@ struct NSG : public Builder {
     //printf("NSG building cost: %.2lfs\n", ela);
 
     std::vector<std::mutex> locks(nb);
-#pragma omp parallel for schedule(dynamic) // dynamic, 10
+#pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < nb; ++i) {
       add_reverse_links(i, locks, graph);
     }
