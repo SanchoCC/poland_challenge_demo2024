@@ -12,7 +12,7 @@
 
 
 int nndescent_iter = 22;
-int nndescent_GK = 150;
+int nndescent_GK = 120;
 int nndescent_S = 10;
 int nndescent_R = 100;
 int nndescent_L = 200;
