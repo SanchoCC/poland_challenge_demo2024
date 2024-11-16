@@ -25,7 +25,7 @@ constexpr inline bool SQ4UA_REFINE = true;
 constexpr inline bool PQ8_REFINE = true;
 
 constexpr inline int32_t SQ8_REFINE_FACTOR = 10;
-constexpr inline int32_t SQ8U_REFINE_FACTOR = 5;
+constexpr inline int32_t SQ8U_REFINE_FACTOR = 1;
 constexpr inline int32_t SQ8P_REFINE_FACTOR = 15;
 constexpr inline int32_t SQ4U_REFINE_FACTOR = 10;
 constexpr inline int32_t SQ4UA_REFINE_FACTOR = 10;
@@ -48,7 +48,7 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
   // Memory prefetch parameters
   int32_t po = 2;
   int32_t pl = 2;
-  int32_t graph_po = 12;
+  int32_t graph_po = 16;
 
   // Optimization parameters
   constexpr static int32_t kOptimizePoints = 15000;
