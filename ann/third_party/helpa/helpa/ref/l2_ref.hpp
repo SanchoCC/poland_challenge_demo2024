@@ -7,7 +7,6 @@ namespace helpa {
 inline float
 l2_fp32_fp32_ref(const float* x, const float* y, const int32_t d) {
     auto ans = 0.0f;
-#pragma omp parallel for reduction(+:ans)
     for (int32_t i = 0; i < d; ++i) {
         auto t = x[i] - y[i];
         ans += t * t;
