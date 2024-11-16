@@ -217,7 +217,7 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
 
   void SearchImpl(inference::NeighborPoolConcept auto &pool,
                   ComputerConcept auto &computer) const {
-    alignas(128) int32_t edge_buf[graph.K];
+    alignas(64) int32_t edge_buf[graph.K];
     while (pool.has_next()) {
       auto u = pool.pop();
       graph.prefetch(u, graph_po);
