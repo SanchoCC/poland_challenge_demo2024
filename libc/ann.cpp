@@ -11,8 +11,8 @@
 
 
 
-int nndescent_iter = 22;
-int nndescent_GK = 150;
+int nndescent_iter = 19;
+int nndescent_GK = 170;
 int nndescent_S = 10;
 int nndescent_R = 100;
 int nndescent_L = 200;
@@ -30,7 +30,7 @@ using IndexNSG = ann::NSG;
 std::unique_ptr<ann::GraphSearcherBase> searcher;
 
 void *ann_init(int K_features, int R, const char *metric){
-    ann_R = R + 40;
+    ann_R = R + 36;
     ann_L = R + 50;
     std::string metricS(metric);
     IndexNSG *vidx = new IndexNSG(K_features, metricS, ann_R, ann_L);
