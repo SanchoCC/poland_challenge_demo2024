@@ -1,34 +1,16 @@
 #pragma once
-#include "ann/third_party/helpa/helpa/types.hpp"
-#include <cstdint>
-#include <cstdio>
-#if defined(__SSE2__)
-#include <immintrin.h>
-#elif defined(__aarch64__)
-#include <arm_neon.h>
-#endif
 
-#include "../ann/helpa/helpa/common.hpp"
+#include "ann/third_party/helpa/helpa/types.hpp"
 
 namespace helpa {
 
 inline float dot_fp32_fp32_ref(const float *x, const float *y,
                                const int32_t d) {
-#if defined(__aarch64__)
-    float32x4_t sum = vdupq_n_f32(0);
-    for (int32_t i = 0; i < d; i += 4) {
-        auto xx = vld1q_f32(x + i);
-        auto yy = vld1q_f32(y + i);
-        sum = vmlaq_f32(sum, xx, yy);
-    }
-    return vaddvq_f32(sum);
-#else
-    float sum = 0.0;
-    for (int i = 0; i < d; ++i) {
-        sum += x[i] * y[i];
-    }
-    return -sum;
-#endif
+  auto ans = 0.0f;
+  for (int32_t i = 0; i < d; ++i) {
+    ans += x[i] * y[i];
+  }
+  return -ans;
 }
 
 inline float dot_fp32_fp16_ref(const float *x, const fp16 *y, const int32_t d) {
