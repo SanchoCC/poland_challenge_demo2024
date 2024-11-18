@@ -29,7 +29,47 @@ int reduced_dim = 128;
 using IndexNSG = ann::NSG;
 std::unique_ptr<ann::GraphSearcherBase> searcher;
 
+float vector_norm(const std::vector<float>& vec) {
+    float sum = 0.0f;
+    for (float val : vec) {
+        sum += val * val;
+    }
+    return std::sqrt(sum);
+}
+
+void normalize_vector(std::vector<float>& vec) {
+    float norm = vector_norm(vec);
+    if (norm < 1e-6) throw std::runtime_error("Vector norm too small for normalization!");
+    for (float& val : vec) {
+        val /= norm;
+    }
+}
+void qr_decomposition(const std::vector<std::vector<float>>& A,
+    std::vector<std::vector<float>>& Q,
+    std::vector<std::vector<float>>& R) {
+    int d = A.size();
+    Q = std::vector<std::vector<float>>(d, std::vector<float>(d, 0.0f));
+    R = std::vector<std::vector<float>>(d, std::vector<float>(d, 0.0f));
+
+    for (int k = 0; k < d; ++k) {
+        Q[k] = A[k];
+        for (int j = 0; j < k; ++j) {
+            float dot_product = 0.0f;
+            for (int i = 0; i < d; ++i) {
+                dot_product += A[k][i] * Q[j][i];
+            }
+            R[j][k] = dot_product;
+            for (int i = 0; i < d; ++i) {
+                Q[k][i] -= dot_product * Q[j][i];
+            }
+        }
+        normalize_vector(Q[k]);
+        R[k][k] = vector_norm(Q[k]);
+    }
+}
+
 void reduce_dim_PCA(const float* data, int n, int d, int target_dim, float*& reduced_data) {
+
     std::vector<float> mean(d, 0.0f);
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < d; ++j) {
@@ -40,6 +80,7 @@ void reduce_dim_PCA(const float* data, int n, int d, int target_dim, float*& red
         mean[j] /= n;
     }
 
+
     std::vector<float> centered_data(n * d);
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < d; ++j) {
@@ -47,54 +88,51 @@ void reduce_dim_PCA(const float* data, int n, int d, int target_dim, float*& red
         }
     }
 
-    std::vector<float> covariance(d * d, 0.0f);
+
+    std::vector<std::vector<float>> covariance(d, std::vector<float>(d, 0.0f));
     for (int i = 0; i < d; ++i) {
         for (int j = 0; j <= i; ++j) {
             float sum = 0.0f;
             for (int k = 0; k < n; ++k) {
                 sum += centered_data[k * d + i] * centered_data[k * d + j];
             }
-            covariance[i * d + j] = sum / (n - 1);
-            covariance[j * d + i] = covariance[i * d + j];
+            covariance[i][j] = sum / (n - 1);
+            covariance[j][i] = covariance[i][j];
         }
     }
 
-    std::vector<float> eigenvalues(d, 0.0f);
-    std::vector<float> eigenvectors(d * d, 0.0f);
-    for (int i = 0; i < d; ++i) eigenvectors[i * d + i] = 1.0f;
 
+    std::vector<std::vector<float>> eigenvectors = covariance;
     for (int iter = 0; iter < 100; ++iter) {
-        int p = 0, q = 1;
-        float max_val = fabs(covariance[p * d + q]);
+        std::vector<std::vector<float>> Q, R;
+        qr_decomposition(eigenvectors, Q, R);
+
+
+        eigenvectors = std::vector<std::vector<float>>(d, std::vector<float>(d, 0.0f));
         for (int i = 0; i < d; ++i) {
-            for (int j = i + 1; j < d; ++j) {
-                if (fabs(covariance[i * d + j]) > max_val) {
-                    max_val = fabs(covariance[i * d + j]);
-                    p = i;
-                    q = j;
+            for (int j = 0; j < d; ++j) {
+                for (int k = 0; k < d; ++k) {
+                    eigenvectors[i][j] += R[i][k] * Q[k][j];
                 }
             }
         }
-        if (max_val < 1e-6) break;
+    }
 
-        float phi = 0.5 * atan2(2 * covariance[p * d + q], covariance[p * d + p] - covariance[q * d + q]);
-        float cos_phi = cos(phi);
-        float sin_phi = sin(phi);
 
+    std::vector<std::vector<float>> top_eigenvectors(d, std::vector<float>(target_dim));
+    for (int j = 0; j < target_dim; ++j) {
         for (int i = 0; i < d; ++i) {
-            float temp_p = cos_phi * eigenvectors[i * d + p] - sin_phi * eigenvectors[i * d + q];
-            float temp_q = sin_phi * eigenvectors[i * d + p] + cos_phi * eigenvectors[i * d + q];
-            eigenvectors[i * d + p] = temp_p;
-            eigenvectors[i * d + q] = temp_q;
+            top_eigenvectors[i][j] = eigenvectors[i][d - 1 - j];
         }
     }
+
 
     reduced_data = new float[n * target_dim];
     for (int i = 0; i < n; ++i) {
         for (int k = 0; k < target_dim; ++k) {
             float sum = 0.0f;
             for (int j = 0; j < d; ++j) {
-                sum += centered_data[i * d + j] * eigenvectors[j * d + k];
+                sum += centered_data[i * d + j] * top_eigenvectors[j][k];
             }
             reduced_data[i * target_dim + k] = sum;
         }
@@ -105,6 +143,7 @@ void* ann_init(int K_features, int R, const char* metric) {
     ann_R = R + 30;
     ann_L = R + 50;
     original_dim = K_features;
+    reduced_dim = original_dim * 0.75;
 
     std::string metricS(metric);
     IndexNSG* vidx = new IndexNSG(reduced_dim, metricS, ann_R, ann_L);
