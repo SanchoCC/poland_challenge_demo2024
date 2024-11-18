@@ -76,7 +76,7 @@ void ann_search(void *ptr, int n, const float* x, int k, float* distances,
                 int32_t* labels, int num_p){
     IndexNSG *vidx = (IndexNSG *)ptr;
     // 调用c++函数
-    searcher->SearchBatch(x, n, k, labels, distances);
+    searcher->SearchBatch(x, n, k, labels);
     
 }
 
