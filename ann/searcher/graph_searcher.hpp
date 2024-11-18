@@ -209,7 +209,7 @@ template <QuantConcept Quant> struct GraphSearcher : public GraphSearcherBase {
 
   void SearchBatch(const float *q, int32_t nq, int32_t k, int32_t *ids,
                    float *dis = nullptr) const override {
-#pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for schedule(dynamic, 10)
     for (int i = 0; i < nq; ++i) {
       Search(q + i * d, k, ids + i * k, dis ? dis + i * k : nullptr);
     }
